@@ -26,7 +26,7 @@ import {
 interface NavItem {
   title: string
   url: string
-  icon: LucideIcon
+  icon?: LucideIcon
   isActive?: boolean
   items?: NavItem[]
 }
@@ -124,7 +124,9 @@ export function NavMain() {
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton asChild isActive={item.isActive}>
               <Link href={item.url}>
+              {item?.icon && (
                 <item.icon />
+              )}
                 <span>{item.title}</span>
               </Link>
             </SidebarMenuButton>

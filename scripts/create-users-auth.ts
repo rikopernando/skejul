@@ -6,10 +6,12 @@ async function createUsers() {
   try {
     // Create admin user
     console.log('Creating admin user...');
-    const adminResult = await auth.api.signUp({
-      email: 'admin@example.com',
-      password: 'admin123',
-      name: 'Admin User'
+    const adminResult = await auth.api.signUpEmail({
+      body: {
+        email: 'admin@example.com',
+        password: 'admin123',
+        name: 'Admin User'
+      }
     });
     
     console.log('Admin user created:', adminResult);
@@ -25,10 +27,12 @@ async function createUsers() {
     
     for (const teacher of teachers) {
       console.log(`Creating teacher: ${teacher.name}...`);
-      const result = await auth.api.signUp({
-        email: teacher.email,
-        password: 'teacher123',
-        name: teacher.name
+      const result = await auth.api.signUpEmail({
+        body: {
+          email: teacher.email,
+          password: 'teacher123',
+          name: teacher.name
+        }
       });
       
       console.log(`Teacher ${teacher.name} created:`, result);

@@ -1,17 +1,17 @@
 'use server';
 
+import { eq } from 'drizzle-orm';
+import { headers } from "next/headers";
+
+import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
 
 // Get current user profile
 export async function getCurrentUserProfile() {
   try {
     const session = await auth.api.getSession({
-      headers: {
-        cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-      }
+      headers: await headers() // you need to pass the headers object.
     });
 
     if (!session?.user) {
@@ -28,13 +28,13 @@ export async function getCurrentUserProfile() {
       console.log('Profile not found, creating one for user:', session.user.id);
       
       // Create a new profile with default role
-      const newProfile = await db.insert(profiles).values({
+      const [newProfile] = await db.insert(profiles).values({
         id: session.user.id,
         fullName: session.user.name || 'New User',
         role: 'teacher' // Default role
       }).returning();
       
-      profile = newProfile[0];
+      profile = newProfile;
     }
 
     return profile;
@@ -50,9 +50,7 @@ export async function getCurrentUserProfile() {
 // Update user role (admin only)
 export async function updateUserRole(userId: string, role: typeof profiles.$inferSelect.role) {
   const session = await auth.api.getSession({
-    headers: {
-      cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-    }
+    headers: await headers() // you need to pass the headers object.
   });
 
   // Check if current user is admin
@@ -79,9 +77,7 @@ export async function createTeacherProfile(profileData: {
   employeeId?: string;
 }) {
   const session = await auth.api.getSession({
-    headers: {
-      cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-    }
+    headers: await headers() // you need to pass the headers object.
   });
 
   // Check if current user is admin

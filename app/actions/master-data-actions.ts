@@ -1,17 +1,16 @@
 'use server';
 
+import { headers } from "next/headers";
 import { db } from '@/db';
 import { teachers, subjects, classes, rooms } from '@/db/schema';
-import { eq, like } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 
 // Helper function to check if user is admin
 async function checkAdmin() {
   try {
     const session = await auth.api.getSession({
-      headers: {
-        cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-      }
+      headers: await headers() // you need to pass the headers object.
     });
 
     if (!session?.user) {

@@ -178,7 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={staticData.navMain} />
+        <NavMain />
         <NavDocuments items={staticData.documents} />
         <NavSecondary items={staticData.navSecondary} className="mt-auto" />
       </SidebarContent>

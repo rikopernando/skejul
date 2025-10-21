@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Parkinsans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { JadwalBot } from "@/components/schedule/jadwal-bot";
-import { Toaster } from "@/components/ui/toast";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({

@@ -32,8 +32,9 @@ import { Trash2, Edit, Plus } from 'lucide-react';
 // Type definitions
 type Teacher = {
   id: string;
+  profileId: string | null;
   name: string;
-  employeeId?: string;
+  employeeId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -41,8 +42,8 @@ type Teacher = {
 type Subject = {
   id: string;
   name: string;
-  code?: string;
-  description?: string;
+  code: string | null;
+  description: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -50,8 +51,8 @@ type Subject = {
 type Class = {
   id: string;
   name: string;
-  grade?: number;
-  academicYear?: string;
+  grade: number | null;
+  academicYear: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -59,8 +60,8 @@ type Class = {
 type Room = {
   id: string;
   name: string;
-  capacity?: number;
-  location?: string;
+  capacity: number | null;
+  location: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -115,11 +116,7 @@ export function MasterDataManagement() {
           break;
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load data',
-        variant: 'destructive'
-      });
+      toast.error('Failed to load data')
     }
   };
 
@@ -132,16 +129,9 @@ export function MasterDataManagement() {
       });
       setTeachers([...teachers, newTeacher]);
       setTeacherForm({ name: '', employeeId: '' });
-      toast({
-        title: 'Success',
-        description: 'Teacher created successfully'
-      });
+      toast.success('Teacher created successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create teacher',
-        variant: 'destructive'
-      });
+      toast.error('Failed to create teacher')
     }
   };
 
@@ -155,16 +145,9 @@ export function MasterDataManagement() {
       setTeachers(teachers.map(t => t.id === editingTeacher.id ? updatedTeacher : t));
       setEditingTeacher(null);
       setTeacherForm({ name: '', employeeId: '' });
-      toast({
-        title: 'Success',
-        description: 'Teacher updated successfully'
-      });
+      toast.success('Teacher updated successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update teacher',
-        variant: 'destructive'
-      });
+      toast.error('Failed to update teacher')
     }
   };
 
@@ -172,16 +155,9 @@ export function MasterDataManagement() {
     try {
       await deleteTeacher(id);
       setTeachers(teachers.filter(t => t.id !== id));
-      toast({
-        title: 'Success',
-        description: 'Teacher deleted successfully'
-      });
+      toast.success('Teacher deleted successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete teacher',
-        variant: 'destructive'
-      });
+      toast.error('Failed to delete teacher')
     }
   };
 
@@ -195,16 +171,9 @@ export function MasterDataManagement() {
       });
       setSubjects([...subjects, newSubject]);
       setSubjectForm({ name: '', code: '', description: '' });
-      toast({
-        title: 'Success',
-        description: 'Subject created successfully'
-      });
+      toast.success('Subject created successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create subject',
-        variant: 'destructive'
-      });
+      toast.error('Failed to create subject')
     }
   };
 
@@ -219,16 +188,9 @@ export function MasterDataManagement() {
       setSubjects(subjects.map(s => s.id === editingSubject.id ? updatedSubject : s));
       setEditingSubject(null);
       setSubjectForm({ name: '', code: '', description: '' });
-      toast({
-        title: 'Success',
-        description: 'Subject updated successfully'
-      });
+      toast.success('Subject updated successfully')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update subject',
-        variant: 'destructive'
-      });
+      toast.error('Failed to update subject')
     }
   };
 
@@ -236,16 +198,9 @@ export function MasterDataManagement() {
     try {
       await deleteSubject(id);
       setSubjects(subjects.filter(s => s.id !== id));
-      toast({
-        title: 'Success',
-        description: 'Subject deleted successfully'
-      });
+      toast.success('Subject deleted successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete subject',
-        variant: 'destructive'
-      });
+      toast.error('Failed to delete subject')
     }
   };
 
@@ -259,16 +214,9 @@ export function MasterDataManagement() {
       });
       setClasses([...classes, newClass]);
       setClassForm({ name: '', grade: '', academicYear: '' });
-      toast({
-        title: 'Success',
-        description: 'Class created successfully'
-      });
+      toast.success('Class created successfully')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create class',
-        variant: 'destructive'
-      });
+      toast.error('Failed to create class')
     }
   };
 
@@ -283,16 +231,9 @@ export function MasterDataManagement() {
       setClasses(classes.map(c => c.id === editingClass.id ? updatedClass : c));
       setEditingClass(null);
       setClassForm({ name: '', grade: '', academicYear: '' });
-      toast({
-        title: 'Success',
-        description: 'Class updated successfully'
-      });
+      toast.success('Class updated successfully')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update class',
-        variant: 'destructive'
-      });
+      toast.error('Failed to update class')
     }
   };
 
@@ -300,16 +241,9 @@ export function MasterDataManagement() {
     try {
       await deleteClass(id);
       setClasses(classes.filter(c => c.id !== id));
-      toast({
-        title: 'Success',
-        description: 'Class deleted successfully'
-      });
+      toast.success('Class deleted successfully')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete class',
-        variant: 'destructive'
-      });
+      toast.error('Failed to delete class')
     }
   };
 
@@ -323,16 +257,9 @@ export function MasterDataManagement() {
       });
       setRooms([...rooms, newRoom]);
       setRoomForm({ name: '', capacity: '', location: '' });
-      toast({
-        title: 'Success',
-        description: 'Room created successfully'
-      });
+      toast.success('Room created successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create room',
-        variant: 'destructive'
-      });
+      toast.error('Failed to create room')
     }
   };
 
@@ -347,16 +274,9 @@ export function MasterDataManagement() {
       setRooms(rooms.map(r => r.id === editingRoom.id ? updatedRoom : r));
       setEditingRoom(null);
       setRoomForm({ name: '', capacity: '', location: '' });
-      toast({
-        title: 'Success',
-        description: 'Room updated successfully'
-      });
+      toast.success('Room updated successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update room',
-        variant: 'destructive'
-      });
+      toast.error('Failed to update room')
     }
   };
 
@@ -364,16 +284,9 @@ export function MasterDataManagement() {
     try {
       await deleteRoom(id);
       setRooms(rooms.filter(r => r.id !== id));
-      toast({
-        title: 'Success',
-        description: 'Room deleted successfully'
-      });
+      toast.success('Room deleted successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete room',
-        variant: 'destructive'
-      });
+      toast.error('Failed to delete room')
     }
   };
 
