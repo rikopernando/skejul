@@ -13,8 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/hooks/use-master-data';
-import { Room } from '@/types/master-data.types';
+import { useMasterData } from '@/contexts/master-data-context';
 
 export function RoomForm() {
   const {
@@ -24,7 +23,7 @@ export function RoomForm() {
     setEditingItem,
     createItem,
     updateItem,
-  } = useMasterData<Room>('rooms');
+  } = useMasterData('rooms');
   
   const [open, setOpen] = useState(false);
 
@@ -49,6 +48,8 @@ export function RoomForm() {
           location: typeof formValues.location === 'string' ? formValues.location : undefined
         });
       }
+      // Reset form values after successful operation
+      setFormValues({ name: '', capacity: '', location: '' });
       setOpen(false);
     } catch (error) {
       // Error is handled in the hook

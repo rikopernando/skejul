@@ -13,8 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/hooks/use-master-data';
-import { Teacher } from '@/types/master-data.types';
+import { useMasterData } from '@/contexts/master-data-context';
 
 export function TeacherForm() {
   const {
@@ -24,7 +23,7 @@ export function TeacherForm() {
     setEditingItem,
     createItem,
     updateItem,
-  } = useMasterData<Teacher>('teachers');
+  } = useMasterData('teachers');
   
   const [open, setOpen] = useState(false);
 
@@ -47,6 +46,8 @@ export function TeacherForm() {
           employeeId: typeof formValues.employeeId === 'string' ? formValues.employeeId : undefined
         });
       }
+      // Reset form values after successful operation
+      setFormValues({ name: '', employeeId: '' });
       setOpen(false);
     } catch (error) {
       // Error is handled in the hook

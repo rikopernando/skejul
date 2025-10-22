@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2 } from 'lucide-react';
-import { useMasterData } from '@/hooks/use-master-data';
+import { useMasterData } from '@/contexts/master-data-context';
 import { Teacher } from '@/types/master-data.types';
 
 export function TeacherTable() {
@@ -14,7 +14,7 @@ export function TeacherTable() {
     setEditingItem,
     setFormValues,
     deleteItem,
-  } = useMasterData<Teacher>('teachers');
+  } = useMasterData('teachers');
 
   const handleEdit = (teacher: Teacher) => {
     setEditingItem(teacher);

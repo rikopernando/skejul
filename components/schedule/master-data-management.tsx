@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MasterDataProvider } from '@/contexts/master-data-context';
 import { TeacherForm } from '@/components/schedule/teacher-form';
 import { SubjectForm } from '@/components/schedule/subject-form';
 import { ClassForm } from '@/components/schedule/class-form';
@@ -12,7 +13,7 @@ import { SubjectTable } from '@/components/schedule/subject-table';
 import { ClassTable } from '@/components/schedule/class-table';
 import { RoomTable } from '@/components/schedule/room-table';
 
-export function MasterDataManagement() {
+function MasterDataManagementContent() {
   const [activeTab, setActiveTab] = useState('teachers');
 
   return (
@@ -105,5 +106,13 @@ export function MasterDataManagement() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export function MasterDataManagement() {
+  return (
+    <MasterDataProvider>
+      <MasterDataManagementContent />
+    </MasterDataProvider>
   );
 }

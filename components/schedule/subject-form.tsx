@@ -13,8 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/hooks/use-master-data';
-import { Subject } from '@/types/master-data.types';
+import { useMasterData } from '@/contexts/master-data-context';
 
 export function SubjectForm() {
   const {
@@ -24,7 +23,7 @@ export function SubjectForm() {
     setEditingItem,
     createItem,
     updateItem,
-  } = useMasterData<Subject>('subjects');
+  } = useMasterData('subjects');
   
   const [open, setOpen] = useState(false);
 
@@ -49,6 +48,8 @@ export function SubjectForm() {
           description: typeof formValues.description === 'string' ? formValues.description : undefined
         });
       }
+      // Reset form values after successful operation
+      setFormValues({ name: '', code: '', description: '' });
       setOpen(false);
     } catch (error) {
       // Error is handled in the hook
