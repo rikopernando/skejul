@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   getTeachers, 
@@ -65,6 +65,7 @@ interface MasterDataContextType {
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
   refreshData: (entityType: EntityTypes) => Promise<void>;
+  loadData: (entityType: EntityTypes, forceReload?: boolean) => Promise<void>;
   createItem: (entityType: EntityTypes, data: CreateTeacherData | CreateSubjectData | CreateClassData | CreateRoomData) => Promise<Teacher | Subject | Class | Room>;
   updateItem: (entityType: EntityTypes, id: string, data: UpdateTeacherData | UpdateSubjectData | UpdateClassData | UpdateRoomData) => Promise<Teacher | Subject | Class | Room>;
   deleteItem: (entityType: EntityTypes, id: string, itemName: string) => Promise<void>;
@@ -79,59 +80,82 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   const [classes, setClasses] = useState<Class[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<Record<EntityTypes, boolean>>({
-    teachers: true,
-    subjects: true, 
-    classes: true,
-    rooms: true
+    teachers: false,
+    subjects: false, 
+    classes: false,
+    rooms: false
   });
   const [editingItem, setEditingItem] = useState<Teacher | Subject | Class | Room | null>(null);
   const [formValues, setFormValues] = useState<Record<string, unknown>>({});
 
-  const loadData = useCallback(async (entityType: EntityTypes) => {
+  const [dataLoaded, setDataLoaded] = useState<Record<EntityTypes, boolean>>({
+    teachers: false,
+    subjects: false, 
+    classes: false,
+    rooms: false
+  });
+
+  // Use refs to track status to avoid useCallback dependency issues
+  const dataLoadedRef = useRef(dataLoaded);
+  const loadingStatusRef = useRef<Record<EntityTypes, boolean>>({
+    teachers: false,
+    subjects: false, 
+    classes: false,
+    rooms: false
+  });
+  
+  // Sync ref with state changes
+  useEffect(() => {
+    dataLoadedRef.current = dataLoaded;
+  }, [dataLoaded]);
+
+  const loadData = useCallback(async (entityType: EntityTypes, forceReload: boolean = false) => {
+    // Check if already loading or if already loaded (and not forcing reload)
+    if (loadingStatusRef.current[entityType] || (dataLoadedRef.current[entityType] && !forceReload)) {
+      return;
+    }
+    
+    // Mark as loading in ref to prevent duplicate requests
+    loadingStatusRef.current[entityType] = true;
+    
     setLoading(prev => ({ ...prev, [entityType]: true }));
     try {
+      let data;
       switch (entityType) {
         case 'teachers':
-          const teachersData = await getTeachers();
-          setTeachers(teachersData);
+          data = await getTeachers();
+          setTeachers(data);
           break;
         case 'subjects':
-          const subjectsData = await getSubjects();
-          setSubjects(subjectsData);
+          data = await getSubjects();
+          setSubjects(data);
           break;
         case 'classes':
-          const classesData = await getClasses();
-          setClasses(classesData);
+          data = await getClasses();
+          setClasses(data);
           break;
         case 'rooms':
-          const roomsData = await getRooms();
-          setRooms(roomsData);
+          data = await getRooms();
+          setRooms(data);
           break;
       }
+      
+      // Mark data as loaded
+      setDataLoaded(prev => ({ ...prev, [entityType]: true }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       toast.error(`Failed to load ${entityType}: ${errorMessage}`);
     } finally {
+      // Reset loading status in ref
+      loadingStatusRef.current[entityType] = false;
       setLoading(prev => ({ ...prev, [entityType]: false }));
     }
-  }, [toast]);
+  }, [toast]); // Only toast in dependencies to prevent infinite loop
 
-  // Load all data on initial render
-  useEffect(() => {
-    const loadAllData = async () => {
-      await Promise.all([
-        loadData('teachers'),
-        loadData('subjects'),
-        loadData('classes'),
-        loadData('rooms')
-      ]);
-    };
-    
-    loadAllData();
-  }, [loadData]);
+  // No initial data loading - data will be loaded on demand when tabs are activated
 
   const refreshData = useCallback(async (entityType: EntityTypes) => {
-    await loadData(entityType);
+    await loadData(entityType, true); // Force reload
   }, [loadData]);
 
   const createItem = useCallback(async (entityType: EntityTypes, data: CreateTeacherData | CreateSubjectData | CreateClassData | CreateRoomData) => {
@@ -259,6 +283,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
         createItem,
         updateItem,
         deleteItem,
+        loadData,
       }}
     >
       {children}
@@ -275,6 +300,7 @@ export function useMasterData(entityType: 'teachers'): {
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
   refreshData: () => Promise<void>;
+  loadData: () => Promise<void>;
   createItem: (data: CreateTeacherData) => Promise<Teacher>;
   updateItem: (id: string, data: UpdateTeacherData) => Promise<Teacher>;
   deleteItem: (id: string, itemName: string) => Promise<void>;
@@ -288,6 +314,7 @@ export function useMasterData(entityType: 'subjects'): {
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
   refreshData: () => Promise<void>;
+  loadData: () => Promise<void>;
   createItem: (data: CreateSubjectData) => Promise<Subject>;
   updateItem: (id: string, data: UpdateSubjectData) => Promise<Subject>;
   deleteItem: (id: string, itemName: string) => Promise<void>;
@@ -301,6 +328,7 @@ export function useMasterData(entityType: 'classes'): {
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
   refreshData: () => Promise<void>;
+  loadData: () => Promise<void>;
   createItem: (data: CreateClassData) => Promise<Class>;
   updateItem: (id: string, data: UpdateClassData) => Promise<Class>;
   deleteItem: (id: string, itemName: string) => Promise<void>;
@@ -314,6 +342,7 @@ export function useMasterData(entityType: 'rooms'): {
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
   refreshData: () => Promise<void>;
+  loadData: () => Promise<void>;
   createItem: (data: CreateRoomData) => Promise<Room>;
   updateItem: (id: string, data: UpdateRoomData) => Promise<Room>;
   deleteItem: (id: string, itemName: string) => Promise<void>;
@@ -335,6 +364,7 @@ export function useMasterData(entityType: EntityTypes) {
     updateItem, 
     deleteItem,
     refreshData,
+    loadData,
     editingItem,
     setEditingItem,
     formValues,
@@ -352,6 +382,7 @@ export function useMasterData(entityType: EntityTypes) {
         formValues,
         setFormValues,
         refreshData: () => refreshData(entityType),
+        loadData: () => loadData(entityType),
         createItem: (data: CreateTeacherData) => createItem(entityType, data),
         updateItem: (id: string, data: UpdateTeacherData) => updateItem(entityType, id, data),
         deleteItem: (id: string, itemName: string) => deleteItem(entityType, id, itemName),
@@ -365,6 +396,7 @@ export function useMasterData(entityType: EntityTypes) {
         formValues,
         setFormValues,
         refreshData: () => refreshData(entityType),
+        loadData: () => loadData(entityType),
         createItem: (data: CreateSubjectData) => createItem(entityType, data),
         updateItem: (id: string, data: UpdateSubjectData) => updateItem(entityType, id, data),
         deleteItem: (id: string, itemName: string) => deleteItem(entityType, id, itemName),
@@ -378,6 +410,7 @@ export function useMasterData(entityType: EntityTypes) {
         formValues,
         setFormValues,
         refreshData: () => refreshData(entityType),
+        loadData: () => loadData(entityType),
         createItem: (data: CreateClassData) => createItem(entityType, data),
         updateItem: (id: string, data: UpdateClassData) => updateItem(entityType, id, data),
         deleteItem: (id: string, itemName: string) => deleteItem(entityType, id, itemName),
@@ -391,6 +424,7 @@ export function useMasterData(entityType: EntityTypes) {
         formValues,
         setFormValues,
         refreshData: () => refreshData(entityType),
+        loadData: () => loadData(entityType),
         createItem: (data: CreateRoomData) => createItem(entityType, data),
         updateItem: (id: string, data: UpdateRoomData) => updateItem(entityType, id, data),
         deleteItem: (id: string, itemName: string) => deleteItem(entityType, id, itemName),

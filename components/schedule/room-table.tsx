@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,10 +12,16 @@ export function RoomTable() {
   const {
     items: rooms,
     loading,
+    loadData,
     setEditingItem,
     setFormValues,
     deleteItem,
   } = useMasterData('rooms');
+
+  // Load data when component mounts
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleEdit = (room: Room) => {
     setEditingItem(room);

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,10 +12,16 @@ export function SubjectTable() {
   const {
     items: subjects,
     loading,
+    loadData,
     setEditingItem,
     setFormValues,
     deleteItem,
   } = useMasterData('subjects');
+
+  // Load data when component mounts
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleEdit = (subject: Subject) => {
     setEditingItem(subject);
