@@ -49,7 +49,7 @@ const items: NavItem[] = [
   },
   {
     title: "Schedule",
-    url: "/dashboard",
+    url: "/dashboard/schedule",
     icon: Calendar,
   },
   {
