@@ -32,11 +32,7 @@ export function AnnouncementsList() {
       const data = await getAnnouncements();
       setAnnouncements(data);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load announcements',
-        variant: 'destructive'
-      });
+      toast.error('Failed to load announcements');
     } finally {
       setLoading(false);
     }

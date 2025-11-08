@@ -26,11 +26,7 @@ export function RequestSwapModal({ slotId, onSwapRequested }: RequestSwapModalPr
 
   const handleSubmit = async () => {
     if (!requestedId) {
-      toast({
-        title: 'Error',
-        description: 'Please select a teacher to swap with',
-        variant: 'destructive'
-      });
+      toast.error('Please select a teacher to swap with');
       return;
     }
 
@@ -41,23 +37,16 @@ export function RequestSwapModal({ slotId, onSwapRequested }: RequestSwapModalPr
         requestedId,
         message
       });
-      
-      toast({
-        title: 'Success',
-        description: 'Swap request sent successfully'
-      });
-      
+
+      toast.success('Swap request sent successfully');
+
       // Reset form and close modal
       setRequestedId('');
       setMessage('');
       setIsOpen(false);
       onSwapRequested();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to send swap request',
-        variant: 'destructive'
-      });
+      toast.error('Failed to send swap request');
     } finally {
       setLoading(false);
     }

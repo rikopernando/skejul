@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { db } from '@/db';
 import { scheduleSlots, teachers, subjects, classes, rooms } from '@/db/schema';
 import { auth } from '@/lib/auth';
@@ -10,9 +11,7 @@ import { addDays, startOfWeek, endOfWeek } from 'date-fns';
 async function checkAuth() {
   try {
     const session = await auth.api.getSession({
-      headers: {
-        cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-      }
+      headers: await headers()
     });
 
     if (!session?.user) {

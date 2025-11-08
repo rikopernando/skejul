@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,50 +13,59 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/contexts/master-data-context';
+import { useRooms } from '@/contexts/rooms-context';
 
 export function RoomForm() {
   const {
     formValues,
     setFormValues,
-    editingItem,
-    setEditingItem,
-    createItem,
-    updateItem,
-  } = useMasterData('rooms');
-  
+    editingRoom,
+    setEditingRoom,
+    createRoom,
+    updateRoom,
+  } = useRooms();
+
   const [open, setOpen] = useState(false);
+
+  // Open dialog when editingRoom is set
+  useEffect(() => {
+    if (editingRoom) {
+      setOpen(true);
+    }
+  }, [editingRoom]);
 
   const handleOpen = () => {
     setOpen(true);
-    setEditingItem(null);
+    setEditingRoom(null);
+    setFormValues({ name: '', capacity: '', location: '' });
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingRoom(null);
     setFormValues({ name: '', capacity: '', location: '' });
   };
 
   const handleSubmit = async () => {
     try {
-      if (editingItem) {
-        await updateItem(editingItem.id, {
+      if (editingRoom) {
+        await updateRoom(editingRoom.id, {
           name: typeof formValues.name === 'string' ? formValues.name : '',
           capacity: typeof formValues.capacity === 'string' && formValues.capacity ? parseInt(formValues.capacity) : undefined,
           location: typeof formValues.location === 'string' ? formValues.location : undefined
         });
       } else {
-        await createItem({
+        await createRoom({
           name: typeof formValues.name === 'string' ? formValues.name : '',
           capacity: typeof formValues.capacity === 'string' && formValues.capacity ? parseInt(formValues.capacity) : undefined,
           location: typeof formValues.location === 'string' ? formValues.location : undefined
         });
       }
-      // Reset form values after successful operation
-      setFormValues({ name: '', capacity: '', location: '' });
-      setOpen(false);
+      handleClose();
     } catch (error) {
       // Error is handled in the hook
     }
   };
-
-
 
   return (
     <>
@@ -64,15 +73,15 @@ export function RoomForm() {
         <Plus className="mr-2 h-4 w-4" />
         Add Room
       </Button>
-      
-      <Dialog open={open} onOpenChange={setOpen}>
+
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? 'Edit Room' : 'Add Room'}
+              {editingRoom ? 'Edit Room' : 'Add Room'}
             </DialogTitle>
             <DialogDescription>
-              {editingItem 
+              {editingRoom 
                 ? 'Edit the room details below' 
                 : 'Enter the details for the new room'}
             </DialogDescription>
@@ -112,7 +121,7 @@ export function RoomForm() {
               onClick={handleSubmit}
               disabled={!formValues.name}
             >
-              {editingItem ? 'Update' : 'Create'}
+              {editingRoom ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>

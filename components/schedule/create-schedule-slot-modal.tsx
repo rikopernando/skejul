@@ -43,11 +43,7 @@ export function CreateScheduleSlotModal({
 
   const handleSubmit = async () => {
     if (!teacherId || !subjectId || !classId || !roomId || !endTime) {
-      toast({
-        title: 'Error',
-        description: 'Please fill all fields',
-        variant: 'destructive'
-      });
+      toast.error('Please fill all fields');
       return;
     }
 
@@ -62,28 +58,21 @@ export function CreateScheduleSlotModal({
         classId,
         roomId
       });
-      
-      toast({
-        title: 'Success',
-        description: 'Schedule slot created successfully'
-      });
-      
+
+      toast.success('Schedule slot created successfully');
+
       // Reset form
       setTeacherId('');
       setSubjectId('');
       setClassId('');
       setRoomId('');
       setEndTime('');
-      
+
       // Close modal and refresh schedule
       onOpenChange(false);
       onScheduleCreated();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create schedule slot',
-        variant: 'destructive'
-      });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create schedule slot');
     } finally {
       setLoading(false);
     }

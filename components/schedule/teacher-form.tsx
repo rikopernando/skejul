@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,48 +13,57 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/contexts/master-data-context';
+import { useTeachers } from '@/contexts/teachers-context';
 
 export function TeacherForm() {
   const {
     formValues,
     setFormValues,
-    editingItem,
-    setEditingItem,
-    createItem,
-    updateItem,
-  } = useMasterData('teachers');
-  
+    editingTeacher,
+    setEditingTeacher,
+    createTeacher,
+    updateTeacher,
+  } = useTeachers();
+
   const [open, setOpen] = useState(false);
+
+  // Open dialog when editingTeacher is set
+  useEffect(() => {
+    if (editingTeacher) {
+      setOpen(true);
+    }
+  }, [editingTeacher]);
 
   const handleOpen = () => {
     setOpen(true);
-    setEditingItem(null);
+    setEditingTeacher(null);
+    setFormValues({ name: '', employeeId: '' });
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingTeacher(null);
     setFormValues({ name: '', employeeId: '' });
   };
 
   const handleSubmit = async () => {
     try {
-      if (editingItem) {
-        await updateItem(editingItem.id, {
+      if (editingTeacher) {
+        await updateTeacher(editingTeacher.id, {
           name: typeof formValues.name === 'string' ? formValues.name : '',
           employeeId: typeof formValues.employeeId === 'string' ? formValues.employeeId : undefined
         });
       } else {
-        await createItem({
+        await createTeacher({
           name: typeof formValues.name === 'string' ? formValues.name : '',
           employeeId: typeof formValues.employeeId === 'string' ? formValues.employeeId : undefined
         });
       }
-      // Reset form values after successful operation
-      setFormValues({ name: '', employeeId: '' });
-      setOpen(false);
+      handleClose();
     } catch (error) {
       // Error is handled in the hook
     }
   };
-
-
 
   return (
     <>
@@ -62,16 +71,16 @@ export function TeacherForm() {
         <Plus className="mr-2 h-4 w-4" />
         Add Teacher
       </Button>
-      
-      <Dialog open={open} onOpenChange={setOpen}>
+
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? 'Edit Teacher' : 'Add Teacher'}
+              {editingTeacher ? 'Edit Teacher' : 'Add Teacher'}
             </DialogTitle>
             <DialogDescription>
-              {editingItem 
-                ? 'Edit the teacher details below' 
+              {editingTeacher
+                ? 'Edit the teacher details below'
                 : 'Enter the details for the new teacher'}
             </DialogDescription>
           </DialogHeader>
@@ -96,11 +105,11 @@ export function TeacherForm() {
             </div>
           </div>
           <DialogFooter>
-            <Button 
+            <Button
               onClick={handleSubmit}
               disabled={!formValues.name}
             >
-              {editingItem ? 'Update' : 'Create'}
+              {editingTeacher ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>

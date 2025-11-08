@@ -48,15 +48,29 @@ export async function getTeacherById(id: string) {
 
 export async function createTeacher(data: typeof teachers.$inferInsert) {
   await checkAdmin();
-  
-  const result = await db.insert(teachers).values(data).returning();
+
+  // Ensure profileId and employeeId are explicitly set to null if not provided or empty
+  const teacherData = {
+    name: data.name,
+    profileId: data.profileId || null,
+    employeeId: data.employeeId || null,
+  };
+
+  const result = await db.insert(teachers).values(teacherData).returning();
   return result[0];
 }
 
 export async function updateTeacher(id: string, data: Partial<typeof teachers.$inferInsert>) {
   await checkAdmin();
-  
-  const result = await db.update(teachers).set(data).where(eq(teachers.id, id)).returning();
+
+  // Convert empty strings to null for nullable fields
+  const teacherData: Partial<typeof teachers.$inferInsert> = {
+    ...data,
+    profileId: data.profileId || null,
+    employeeId: data.employeeId || null,
+  };
+
+  const result = await db.update(teachers).set(teacherData).where(eq(teachers.id, id)).returning();
   return result[0];
 }
 
@@ -84,15 +98,29 @@ export async function getSubjectById(id: string) {
 
 export async function createSubject(data: typeof subjects.$inferInsert) {
   await checkAdmin();
-  
-  const result = await db.insert(subjects).values(data).returning();
+
+  // Convert empty strings to null for nullable fields
+  const subjectData = {
+    name: data.name,
+    code: data.code || null,
+    description: data.description || null,
+  };
+
+  const result = await db.insert(subjects).values(subjectData).returning();
   return result[0];
 }
 
 export async function updateSubject(id: string, data: Partial<typeof subjects.$inferInsert>) {
   await checkAdmin();
-  
-  const result = await db.update(subjects).set(data).where(eq(subjects.id, id)).returning();
+
+  // Convert empty strings to null for nullable fields
+  const subjectData: Partial<typeof subjects.$inferInsert> = {
+    ...data,
+    code: data.code || null,
+    description: data.description || null,
+  };
+
+  const result = await db.update(subjects).set(subjectData).where(eq(subjects.id, id)).returning();
   return result[0];
 }
 
@@ -120,15 +148,29 @@ export async function getClassById(id: string) {
 
 export async function createClass(data: typeof classes.$inferInsert) {
   await checkAdmin();
-  
-  const result = await db.insert(classes).values(data).returning();
+
+  // Convert empty strings to null for nullable fields
+  const classData = {
+    name: data.name,
+    grade: data.grade || null,
+    academicYear: data.academicYear || null,
+  };
+
+  const result = await db.insert(classes).values(classData).returning();
   return result[0];
 }
 
 export async function updateClass(id: string, data: Partial<typeof classes.$inferInsert>) {
   await checkAdmin();
-  
-  const result = await db.update(classes).set(data).where(eq(classes.id, id)).returning();
+
+  // Convert empty strings to null for nullable fields
+  const classData: Partial<typeof classes.$inferInsert> = {
+    ...data,
+    grade: data.grade || null,
+    academicYear: data.academicYear || null,
+  };
+
+  const result = await db.update(classes).set(classData).where(eq(classes.id, id)).returning();
   return result[0];
 }
 
@@ -156,15 +198,29 @@ export async function getRoomById(id: string) {
 
 export async function createRoom(data: typeof rooms.$inferInsert) {
   await checkAdmin();
-  
-  const result = await db.insert(rooms).values(data).returning();
+
+  // Convert empty strings to null for nullable fields
+  const roomData = {
+    name: data.name,
+    capacity: data.capacity || null,
+    location: data.location || null,
+  };
+
+  const result = await db.insert(rooms).values(roomData).returning();
   return result[0];
 }
 
 export async function updateRoom(id: string, data: Partial<typeof rooms.$inferInsert>) {
   await checkAdmin();
-  
-  const result = await db.update(rooms).set(data).where(eq(rooms.id, id)).returning();
+
+  // Convert empty strings to null for nullable fields
+  const roomData: Partial<typeof rooms.$inferInsert> = {
+    ...data,
+    capacity: data.capacity || null,
+    location: data.location || null,
+  };
+
+  const result = await db.update(rooms).set(roomData).where(eq(rooms.id, id)).returning();
   return result[0];
 }
 

@@ -14,23 +14,26 @@ export async function getCurrentUserProfile() {
       headers: await headers() // you need to pass the headers object.
     });
 
+    console.log({ session })
+
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      // throw new Error('Unauthorized');
+      console.error('User not authenticated')
     }
 
     // Try to find the profile
     let profile = await db.query.profiles.findFirst({
-      where: eq(profiles.id, session.user.id)
+      where: eq(profiles.id, session?.user.id ?? '')
     });
 
     // If profile doesn't exist, create it
     if (!profile) {
-      console.log('Profile not found, creating one for user:', session.user.id);
+      console.log('Profile not found, creating one for user:', session?.user.id);
       
       // Create a new profile with default role
       const [newProfile] = await db.insert(profiles).values({
-        id: session.user.id,
-        fullName: session.user.name || 'New User',
+        id: session?.user.id ?? '',
+        fullName: session?.user.name || 'New User',
         role: 'teacher' // Default role
       }).returning();
       

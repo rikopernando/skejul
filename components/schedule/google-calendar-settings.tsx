@@ -14,20 +14,13 @@ export function GoogleCalendarSettings() {
     setLoading(true);
     try {
       const result = await initiateGoogleOAuth();
-      
+
       // In a real implementation, you would redirect the user to the authorization URL
       // window.location.href = result.authorizationUrl;
-      
-      toast({
-        title: 'Success',
-        description: 'Google Calendar connection initiated. In a real app, you would be redirected to Google for authorization.'
-      });
+
+      toast.success('Google Calendar connection initiated. In a real app, you would be redirected to Google for authorization.');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to initiate Google Calendar connection',
-        variant: 'destructive'
-      });
+      toast.error('Failed to initiate Google Calendar connection');
     } finally {
       setLoading(false);
     }

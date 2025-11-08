@@ -1,35 +1,61 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Edit, Trash2 } from 'lucide-react';
-import { useMasterData } from '@/contexts/master-data-context';
+import { useClasses } from '@/contexts/classes-context';
 import { Class } from '@/types/master-data.types';
 
 export function ClassTable() {
   const {
-    items: classes,
+    classes,
     loading,
-    loadData,
-    setEditingItem,
+    loadClasses,
+    setEditingClass,
     setFormValues,
-    deleteItem,
-  } = useMasterData('classes');
+    deleteClass,
+  } = useClasses();
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [classToDelete, setClassToDelete] = useState<Class | null>(null);
 
   // Load data when component mounts
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadClasses();
+  }, [loadClasses]);
 
   const handleEdit = (classItem: Class) => {
-    setEditingItem(classItem);
+    setEditingClass(classItem);
     setFormValues({
       name: classItem.name,
       grade: classItem.grade?.toString() || '',
       academicYear: classItem.academicYear || ''
     });
+  };
+
+  const handleDeleteClick = (classItem: Class) => {
+    setClassToDelete(classItem);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (classToDelete) {
+      await deleteClass(classToDelete.id, classToDelete.name);
+      setDeleteDialogOpen(false);
+      setClassToDelete(null);
+    }
   };
 
   if (loading) {
@@ -71,7 +97,7 @@ export function ClassTable() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => deleteItem(classItem.id, classItem.name)}
+                onClick={() => handleDeleteClick(classItem)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -79,6 +105,24 @@ export function ClassTable() {
           </TableRow>
         ))}
       </TableBody>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the class{' '}
+              <span className="font-semibold">{classToDelete?.name}</span>.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Table>
   );
 }

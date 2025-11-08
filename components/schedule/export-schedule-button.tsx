@@ -49,17 +49,11 @@ export function ExportScheduleButton({ currentDate }: ExportScheduleButtonProps)
         const csvBlob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         saveAs(csvBlob, 'schedule.csv');
       }
-      
-      toast({
-        title: 'Success',
-        description: `Schedule exported as ${format.toUpperCase()} successfully`
-      });
+
+
+      toast.success(`Schedule exported as ${format.toUpperCase()} successfully`);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to export schedule',
-        variant: 'destructive'
-      });
+      toast.error('Failed to export schedule');
     } finally {
       setLoading(false);
     }

@@ -15,11 +15,7 @@ export function AnnouncementDrafter() {
 
   const handleGenerateDraft = async () => {
     if (!input.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a brief description for the announcement',
-        variant: 'destructive'
-      });
+      toast.error('Please enter a brief description for the announcement');
       return;
     }
 
@@ -27,17 +23,10 @@ export function AnnouncementDrafter() {
     try {
       const response = await aiAssistant(input, 'announcement_draft');
       setDraft(response.data);
-      
-      toast({
-        title: 'Success',
-        description: 'Announcement draft generated successfully'
-      });
+
+      toast.success('Announcement draft generated successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to generate announcement draft',
-        variant: 'destructive'
-      });
+      toast.error('Failed to generate announcement draft');
     } finally {
       setLoading(false);
     }
@@ -45,10 +34,7 @@ export function AnnouncementDrafter() {
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(draft);
-    toast({
-      title: 'Copied',
-      description: 'Announcement draft copied to clipboard'
-    });
+    toast.success('Announcement draft copied to clipboard');
   };
 
   return (

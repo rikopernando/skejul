@@ -13,7 +13,7 @@ type SwapRequest = {
   requesterId: string;
   requestedId: string;
   status: 'pending' | 'approved' | 'rejected';
-  message?: string;
+  message: string | null;
   createdAt: Date;
   requester: {
     id: string;
@@ -35,11 +35,7 @@ export function SwapRequestsList() {
       const data = await getSwapRequests();
       setSwapRequests(data);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load swap requests',
-        variant: 'destructive'
-      });
+      toast.error('Failed to load swap requests');
     } finally {
       setLoading(false);
     }
@@ -48,40 +44,26 @@ export function SwapRequestsList() {
   const handleApprove = async (id: string) => {
     try {
       await approveSwapRequest(id);
-      
-      toast({
-        title: 'Success',
-        description: 'Swap request approved'
-      });
-      
+
+      toast.success('Swap request approved');
+
       // Refresh the list
       loadSwapRequests();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to approve swap request',
-        variant: 'destructive'
-      });
+      toast.error('Failed to approve swap request');
     }
   };
 
   const handleReject = async (id: string) => {
     try {
       await rejectSwapRequest(id);
-      
-      toast({
-        title: 'Success',
-        description: 'Swap request rejected'
-      });
-      
+
+      toast.success('Swap request rejected');
+
       // Refresh the list
       loadSwapRequests();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to reject swap request',
-        variant: 'destructive'
-      });
+      toast.error('Failed to reject swap request');
     }
   };
 

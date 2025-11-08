@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,51 +13,59 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/contexts/master-data-context';
-
+import { useClasses } from '@/contexts/classes-context';
 
 export function ClassForm() {
   const {
     formValues,
     setFormValues,
-    editingItem,
-    setEditingItem,
-    createItem,
-    updateItem,
-  } = useMasterData('classes');
-  
+    editingClass,
+    setEditingClass,
+    createClass,
+    updateClass,
+  } = useClasses();
+
   const [open, setOpen] = useState(false);
+
+  // Open dialog when editingClass is set
+  useEffect(() => {
+    if (editingClass) {
+      setOpen(true);
+    }
+  }, [editingClass]);
 
   const handleOpen = () => {
     setOpen(true);
-    setEditingItem(null);
+    setEditingClass(null);
+    setFormValues({ name: '', grade: '', academicYear: '' });
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingClass(null);
     setFormValues({ name: '', grade: '', academicYear: '' });
   };
 
   const handleSubmit = async () => {
     try {
-      if (editingItem) {
-        await updateItem(editingItem.id, {
+      if (editingClass) {
+        await updateClass(editingClass.id, {
           name: typeof formValues.name === 'string' ? formValues.name : '',
           grade: typeof formValues.grade === 'string' && formValues.grade ? parseInt(formValues.grade) : undefined,
           academicYear: typeof formValues.academicYear === 'string' ? formValues.academicYear : undefined
         });
       } else {
-        await createItem({
+        await createClass({
           name: typeof formValues.name === 'string' ? formValues.name : '',
           grade: typeof formValues.grade === 'string' && formValues.grade ? parseInt(formValues.grade) : undefined,
           academicYear: typeof formValues.academicYear === 'string' ? formValues.academicYear : undefined
         });
       }
-      // Reset form values after successful operation
-      setFormValues({ name: '', grade: '', academicYear: '' });
-      setOpen(false);
+      handleClose();
     } catch (error) {
       // Error is handled in the hook
     }
   };
-
-
 
   return (
     <>
@@ -65,15 +73,15 @@ export function ClassForm() {
         <Plus className="mr-2 h-4 w-4" />
         Add Class
       </Button>
-      
-      <Dialog open={open} onOpenChange={setOpen}>
+
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? 'Edit Class' : 'Add Class'}
+              {editingClass ? 'Edit Class' : 'Add Class'}
             </DialogTitle>
             <DialogDescription>
-              {editingItem 
+              {editingClass 
                 ? 'Edit the class details below' 
                 : 'Enter the details for the new class'}
             </DialogDescription>
@@ -113,7 +121,7 @@ export function ClassForm() {
               onClick={handleSubmit}
               disabled={!formValues.name}
             >
-              {editingItem ? 'Update' : 'Create'}
+              {editingClass ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>

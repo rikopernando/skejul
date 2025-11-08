@@ -1,35 +1,61 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Edit, Trash2 } from 'lucide-react';
-import { useMasterData } from '@/contexts/master-data-context';
+import { useRooms } from '@/contexts/rooms-context';
 import { Room } from '@/types/master-data.types';
 
 export function RoomTable() {
   const {
-    items: rooms,
+    rooms,
     loading,
-    loadData,
-    setEditingItem,
+    loadRooms,
+    setEditingRoom,
     setFormValues,
-    deleteItem,
-  } = useMasterData('rooms');
+    deleteRoom,
+  } = useRooms();
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
 
   // Load data when component mounts
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadRooms();
+  }, [loadRooms]);
 
   const handleEdit = (room: Room) => {
-    setEditingItem(room);
+    setEditingRoom(room);
     setFormValues({
       name: room.name,
       capacity: room.capacity?.toString() || '',
       location: room.location || ''
     });
+  };
+
+  const handleDeleteClick = (room: Room) => {
+    setRoomToDelete(room);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (roomToDelete) {
+      await deleteRoom(roomToDelete.id, roomToDelete.name);
+      setDeleteDialogOpen(false);
+      setRoomToDelete(null);
+    }
   };
 
   if (loading) {
@@ -71,7 +97,7 @@ export function RoomTable() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => deleteItem(room.id, room.name)}
+                onClick={() => handleDeleteClick(room)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -79,6 +105,24 @@ export function RoomTable() {
           </TableRow>
         ))}
       </TableBody>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the room{' '}
+              <span className="font-semibold">{roomToDelete?.name}</span>.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Table>
   );
 }

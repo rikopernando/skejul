@@ -55,9 +55,9 @@ export function ScheduleCalendar() {
   // Get the start and end of the current week
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 });
   const endDate = endOfWeek(currentDate, { weekStartsOn: 1 });
-  
+
   // Generate days for the week
-  const days = [];
+  const days: Date[] = [];
   for (let i = 0; i < 7; i++) {
     days.push(addDays(startDate, i));
   }

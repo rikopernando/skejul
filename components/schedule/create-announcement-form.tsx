@@ -17,34 +17,23 @@ export function CreateAnnouncementForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title.trim() || !content.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive'
-      });
+      toast.error('Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
       await createAnnouncement({ title, content });
-      
-      toast({
-        title: 'Success',
-        description: 'Announcement created successfully'
-      });
-      
+
+      toast.success('Announcement created successfully');
+
       // Reset form
       setTitle('');
       setContent('');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create announcement',
-        variant: 'destructive'
-      });
+      toast.error('Failed to create announcement');
     } finally {
       setLoading(false);
     }

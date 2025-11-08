@@ -22,17 +22,10 @@ export function SmartScheduleValidator() {
       // For now, we'll send a mock request
       const response = await aiAssistant('Validate current schedule', 'schedule_validation');
       setFeedback(response.data);
-      
-      toast({
-        title: 'Success',
-        description: 'Schedule validation completed'
-      });
+
+      toast.success('Schedule validation completed');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to validate schedule',
-        variant: 'destructive'
-      });
+      toast.error('Failed to validate schedule');
     } finally {
       setLoading(false);
     }

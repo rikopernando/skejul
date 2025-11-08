@@ -17,32 +17,21 @@ export function AdminManagement() {
 
   const handleUpdateRole = async () => {
     if (!userId) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a user ID',
-        variant: 'destructive'
-      });
+      toast.error('Please enter a user ID');
       return;
     }
 
     setLoading(true);
     try {
       await updateUserRole(userId, role);
-      
-      toast({
-        title: 'Success',
-        description: `User role updated to ${role}`
-      });
-      
+
+      toast.success(`User role updated to ${role}`);
+
       // Reset form
       setUserId('');
       setRole('teacher');
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update user role',
-        variant: 'destructive'
-      });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update user role');
     } finally {
       setLoading(false);
     }

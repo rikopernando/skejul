@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { db } from '@/db';
 import { announcements, profiles } from '@/db/schema';
 import { auth } from '@/lib/auth';
@@ -9,9 +10,7 @@ import { eq, desc } from 'drizzle-orm';
 async function checkAuth() {
   try {
     const session = await auth.api.getSession({
-      headers: {
-        cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-      }
+      headers: await headers()
     });
 
     if (!session?.user) {
@@ -53,9 +52,7 @@ export async function getAnnouncements() {
 // Create a new announcement
 export async function createAnnouncement(data: { title: string; content: string }) {
   const session = await auth.api.getSession({
-    headers: {
-      cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-    }
+    headers: await headers()
   });
 
   if (!session?.user) {
@@ -84,9 +81,7 @@ export async function createAnnouncement(data: { title: string; content: string 
 // Update an announcement
 export async function updateAnnouncement(id: string, data: { title?: string; content?: string }) {
   const session = await auth.api.getSession({
-    headers: {
-      cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-    }
+    headers: await headers()
   });
 
   if (!session?.user) {
@@ -110,9 +105,7 @@ export async function updateAnnouncement(id: string, data: { title?: string; con
 // Delete an announcement
 export async function deleteAnnouncement(id: string) {
   const session = await auth.api.getSession({
-    headers: {
-      cookie: `better-auth.session_token=${(await auth.api.getSession({ headers: {} }))?.session?.token || ''}`
-    }
+    headers: await headers()
   });
 
   if (!session?.user) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,50 +13,59 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useMasterData } from '@/contexts/master-data-context';
+import { useSubjects } from '@/contexts/subjects-context';
 
 export function SubjectForm() {
   const {
     formValues,
     setFormValues,
-    editingItem,
-    setEditingItem,
-    createItem,
-    updateItem,
-  } = useMasterData('subjects');
-  
+    editingSubject,
+    setEditingSubject,
+    createSubject,
+    updateSubject,
+  } = useSubjects();
+
   const [open, setOpen] = useState(false);
+
+  // Open dialog when editingSubject is set
+  useEffect(() => {
+    if (editingSubject) {
+      setOpen(true);
+    }
+  }, [editingSubject]);
 
   const handleOpen = () => {
     setOpen(true);
-    setEditingItem(null);
+    setEditingSubject(null);
+    setFormValues({ name: '', code: '', description: '' });
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingSubject(null);
     setFormValues({ name: '', code: '', description: '' });
   };
 
   const handleSubmit = async () => {
     try {
-      if (editingItem) {
-        await updateItem(editingItem.id, {
+      if (editingSubject) {
+        await updateSubject(editingSubject.id, {
           name: typeof formValues.name === 'string' ? formValues.name : '',
           code: typeof formValues.code === 'string' ? formValues.code : undefined,
           description: typeof formValues.description === 'string' ? formValues.description : undefined
         });
       } else {
-        await createItem({
+        await createSubject({
           name: typeof formValues.name === 'string' ? formValues.name : '',
           code: typeof formValues.code === 'string' ? formValues.code : undefined,
           description: typeof formValues.description === 'string' ? formValues.description : undefined
         });
       }
-      // Reset form values after successful operation
-      setFormValues({ name: '', code: '', description: '' });
-      setOpen(false);
+      handleClose();
     } catch (error) {
       // Error is handled in the hook
     }
   };
-
-
 
   return (
     <>
@@ -64,15 +73,15 @@ export function SubjectForm() {
         <Plus className="mr-2 h-4 w-4" />
         Add Subject
       </Button>
-      
-      <Dialog open={open} onOpenChange={setOpen}>
+
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? 'Edit Subject' : 'Add Subject'}
+              {editingSubject ? 'Edit Subject' : 'Add Subject'}
             </DialogTitle>
             <DialogDescription>
-              {editingItem 
+              {editingSubject 
                 ? 'Edit the subject details below' 
                 : 'Enter the details for the new subject'}
             </DialogDescription>
@@ -111,7 +120,7 @@ export function SubjectForm() {
               onClick={handleSubmit}
               disabled={!formValues.name}
             >
-              {editingItem ? 'Update' : 'Create'}
+              {editingSubject ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>
