@@ -10,6 +10,7 @@ import { getScheduleSlotsForWeek } from '@/app/actions/schedule-actions';
 import { useClassData } from '@/hooks/use-class-data';
 import { useTeacherData } from '@/hooks/use-teacher-data';
 import { CreateScheduleSlotModal } from '@/components/schedule/create-schedule-slot-modal';
+import { ScheduleDetailModal } from '@/components/schedule/schedule-detail-modal';
 import { useToast } from '@/components/ui/use-toast';
 import { ExportScheduleButton } from '@/components/schedule/export-schedule-button';
 
@@ -44,10 +45,14 @@ export function ScheduleCalendar() {
   const [selectedTeacher, setSelectedTeacher] = useState<string>(''); // Initialize with empty string
   const [loading, setLoading] = useState(true);
   
-  // Modal state
+  // Modal state for creating new slots
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedTime, setSelectedTime] = useState('');
+
+  // Modal state for viewing/editing existing slots
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
   
   const { classes, loading: classesLoading } = useClassData();
   const { teachers, loading: teachersLoading } = useTeacherData();
@@ -110,18 +115,32 @@ export function ScheduleCalendar() {
     setIsModalOpen(true);
   };
 
+  // Handle clicking on an existing schedule slot
+  const handleSlotClick = (slot: ScheduleSlot) => {
+    setSelectedSlot(slot);
+    setIsDetailModalOpen(true);
+  };
+
   // Handle schedule created
   const handleScheduleCreated = () => {
+    loadScheduleData(); // Refresh the schedule
+  };
+
+  // Handle schedule updated/deleted
+  const handleScheduleUpdated = () => {
     loadScheduleData(); // Refresh the schedule
   };
 
   // Render a time slot cell
   const renderTimeSlot = (dayIndex: number, time: string) => {
     const slot = findSlot(dayIndex, time);
-    
+
     if (slot) {
       return (
-        <div className="p-1 h-16 border rounded bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
+        <div
+          className="p-1 h-16 border rounded bg-blue-50 dark:bg-blue-900/20 overflow-hidden cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+          onClick={() => handleSlotClick(slot)}
+        >
           <div className="text-xs font-medium truncate">
             {slot.subject?.name}
           </div>
@@ -262,6 +281,13 @@ export function ScheduleCalendar() {
         dayOfWeek={selectedDay}
         startTime={selectedTime}
         onScheduleCreated={handleScheduleCreated}
+      />
+
+      <ScheduleDetailModal
+        open={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
+        slot={selectedSlot}
+        onScheduleUpdated={handleScheduleUpdated}
       />
     </>
   );

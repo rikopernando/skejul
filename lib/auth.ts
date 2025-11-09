@@ -28,12 +28,12 @@ export const auth = betterAuth({
                         matcher(context) {
                             return context.path === "/sign-up";
                         },
-                        async handler(ctx) {
+                        async handler(ctx: any) {
                             // After successful sign up, create a profile
-                            if (ctx.context.session) {
-                                await ctx.context.db.insert(profiles).values({
+                            if (ctx.context?.session) {
+                                await db.insert(profiles).values({
                                     id: ctx.context.session.user.id,
-                                    fullName: ctx.context.body.name || "New User",
+                                    fullName: ctx.context.body?.name || "New User",
                                     role: "teacher" // default role
                                 });
                             }

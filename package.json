@@ -19,6 +19,7 @@
     "db:reset": "drizzle-kit drop && drizzle-kit push",
     "db:setup": "npx tsx scripts/setup-db.ts",
     "db:seed": "npx tsx scripts/seed.ts",
+    "db:seed-schedule": "npx tsx scripts/seed-schedule.ts",
     "db:check": "npx tsx scripts/check-users.ts",
     "db:check-accounts": "npx tsx scripts/check-accounts.ts",
     "db:test-password": "npx tsx scripts/test-password.ts",

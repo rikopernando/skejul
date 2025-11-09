@@ -26,16 +26,9 @@ export function UserList() {
     try {
       // In a real implementation, you would fetch users from the database
       // For now, we'll show a message
-      toast({
-        title: 'Feature Not Implemented',
-        description: 'User listing is not implemented in this demo. You can find user IDs in the database.',
-      });
+      toast.info('User listing is not implemented in this demo. You can find user IDs in the database.');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load users',
-        variant: 'destructive'
-      });
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
