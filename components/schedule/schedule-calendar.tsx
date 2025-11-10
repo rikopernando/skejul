@@ -44,7 +44,7 @@ export function ScheduleCalendar() {
   const [selectedClass, setSelectedClass] = useState<string>(''); // Initialize with empty string
   const [selectedTeacher, setSelectedTeacher] = useState<string>(''); // Initialize with empty string
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state for creating new slots
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(1);
@@ -100,12 +100,51 @@ export function ScheduleCalendar() {
     setCurrentDate(newDate);
   };
 
-  // Find slot for a specific day and time
-  const findSlot = (dayIndex: number, time: string) => {
-    return slots.find(slot => 
-      slot.dayOfWeek === dayIndex + 1 && 
+  // Find all slots starting at a specific day and time (for overlapping schedules)
+  const findSlotsAtTime = (dayIndex: number, time: string) => {
+    return slots.filter(slot =>
+      slot.dayOfWeek === dayIndex + 1 &&
       slot.startTime === time
     );
+  };
+
+  // Calculate the height of a slot based on duration
+  const calculateSlotHeight = (startTime: string, endTime: string) => {
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    const durationMinutes = endMinutes - startMinutes;
+
+    // Each 30-minute slot consists of:
+    // - h-16 (64px content)
+    // - p-1 (8px total padding: 4px top + 4px bottom)
+    // - gap-1 (4px gap after each cell except the last)
+    // Total per cell: 64 + 8 + 4 = 76px
+    // For the last cell, no gap after: 64 + 8 = 72px
+    // Formula: (n-1) * 76 + 72 = 76n - 4
+    const slotsCount = durationMinutes / 30;
+    return slotsCount * 76 - 4;
+  };
+
+  // Get the index of a time slot
+  const getTimeSlotIndex = (time: string) => {
+    return timeSlots.indexOf(time);
+  };
+
+  // Color palette for overlapping schedules
+  const slotColors = [
+    { bg: 'bg-blue-50 dark:bg-blue-900/20', hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800' },
+    { bg: 'bg-green-50 dark:bg-green-900/20', hover: 'hover:bg-green-100 dark:hover:bg-green-900/30', border: 'border-green-200 dark:border-green-800' },
+    { bg: 'bg-purple-50 dark:bg-purple-900/20', hover: 'hover:bg-purple-100 dark:hover:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-800' },
+    { bg: 'bg-orange-50 dark:bg-orange-900/20', hover: 'hover:bg-orange-100 dark:hover:bg-orange-900/30', border: 'border-orange-200 dark:border-orange-800' },
+    { bg: 'bg-pink-50 dark:bg-pink-900/20', hover: 'hover:bg-pink-100 dark:hover:bg-pink-900/30', border: 'border-pink-200 dark:border-pink-800' },
+  ];
+
+  // Get color for slot based on index
+  const getSlotColor = (index: number) => {
+    return slotColors[index % slotColors.length];
   };
 
   // Handle creating a new schedule slot
@@ -133,31 +172,55 @@ export function ScheduleCalendar() {
 
   // Render a time slot cell
   const renderTimeSlot = (dayIndex: number, time: string) => {
-    const slot = findSlot(dayIndex, time);
+    const slotsAtTime = findSlotsAtTime(dayIndex, time);
 
-    if (slot) {
+    // If there are slots starting at this time, render them with offset stacking
+    if (slotsAtTime.length > 0) {
       return (
-        <div
-          className="p-1 h-16 border rounded bg-blue-50 dark:bg-blue-900/20 overflow-hidden cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-          onClick={() => handleSlotClick(slot)}
-        >
-          <div className="text-xs font-medium truncate">
-            {slot.subject?.name}
+        <>
+          {slotsAtTime.map((slot, index) => {
+            const height = calculateSlotHeight(slot.startTime, slot.endTime);
+            const colors = getSlotColor(index);
+            const offset = index * 8; // 8px offset for each subsequent slot
+            const zIndex = 10 + index; // Higher z-index for slots on top
+
+            return (
+              <div
+                key={slot.id}
+                className={`mx-3 absolute p-1 border rounded ${colors.bg} ${colors.hover} ${colors.border} overflow-hidden cursor-pointer transition-colors shadow-md`}
+                style={{
+                  height: `${height}px`,
+                  left: `${offset}px`,
+                  top: `${offset}px`,
+                  right: `-${offset}px`,
+                  zIndex
+                }}
+                onClick={() => handleSlotClick(slot)}
+              >
+                <div className="text-xs font-medium truncate">
+                  {slot.subject?.name}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {slot.teacher?.name}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {slot.room?.name}
+                </div>
+              </div>
+            );
+          })}
+          {/* Always show + button even when there are slots */}
+          <div className="h-16 border rounded flex items-center justify-center hover:bg-muted/50 cursor-pointer" onClick={() => handleCreateSlot(dayIndex, time)}>
+            <Plus className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-xs text-muted-foreground truncate">
-            {slot.teacher?.name}
-          </div>
-          <div className="text-xs text-muted-foreground truncate">
-            {slot.room?.name}
-          </div>
-        </div>
+        </>
       );
     }
-    
-    // Empty slot - show a button to create a new slot
+
+    // Always show + button to allow creating schedules even in covered time slots
+    // (e.g., different teacher/class at overlapping times)
     return (
-      <div className="h-16 border rounded flex items-center justify-center hover:bg-muted/50 cursor-pointer"
-           onClick={() => handleCreateSlot(dayIndex, time)}>
+      <div className="h-16 border rounded flex items-center justify-center hover:bg-muted/50 cursor-pointer" onClick={() => handleCreateSlot(dayIndex, time)}>
         <Plus className="h-4 w-4 text-muted-foreground" />
       </div>
     );
@@ -262,7 +325,7 @@ export function ScheduleCalendar() {
                         {time}
                       </div>
                       {days.map((_, dayIndex) => (
-                        <div key={`${timeIndex}-${dayIndex}`} className="p-1">
+                        <div key={`${timeIndex}-${dayIndex}`} className="p-1 relative">
                           {renderTimeSlot(dayIndex, time)}
                         </div>
                       ))}
