@@ -29,12 +29,27 @@ async function checkAuth() {
 }
 
 // Get schedule slots for a specific week
-export async function getScheduleSlotsForWeek(date: Date) {
+export async function getScheduleSlotsForWeek(date: Date, filters?: { classId?: string; teacherId?: string }) {
   await checkAuth();
 
   // Get the start and end of the week
   const startDate = startOfWeek(date, { weekStartsOn: 1 }); // Monday
   const endDate = endOfWeek(date, { weekStartsOn: 1 }); // Sunday
+
+  // Build where conditions
+  const conditions = [
+    gte(scheduleSlots.dayOfWeek, 1), // Monday
+    lte(scheduleSlots.dayOfWeek, 7)  // Sunday
+  ];
+
+  // Add filter conditions if provided
+  if (filters?.classId) {
+    conditions.push(eq(scheduleSlots.classId, filters.classId));
+  }
+
+  if (filters?.teacherId) {
+    conditions.push(eq(scheduleSlots.teacherId, filters.teacherId));
+  }
 
   // Fetch schedule slots with related data
   const slots = await db.select({
@@ -64,12 +79,7 @@ export async function getScheduleSlotsForWeek(date: Date) {
   .leftJoin(subjects, eq(scheduleSlots.subjectId, subjects.id))
   .leftJoin(classes, eq(scheduleSlots.classId, classes.id))
   .leftJoin(rooms, eq(scheduleSlots.roomId, rooms.id))
-  .where(
-    and(
-      gte(scheduleSlots.dayOfWeek, 1), // Monday
-      lte(scheduleSlots.dayOfWeek, 7)  // Sunday
-    )
-  );
+  .where(and(...conditions));
 
   return slots;
 }

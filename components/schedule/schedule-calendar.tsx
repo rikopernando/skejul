@@ -5,11 +5,13 @@ import { format, addDays, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { ChevronLeft, ChevronRight, Plus, CalendarIcon } from 'lucide-react';
 import { getScheduleSlotsForWeek } from '@/app/actions/schedule-actions';
 import { useClassData } from '@/hooks/use-class-data';
 import { useTeacherData } from '@/hooks/use-teacher-data';
-import { CreateScheduleSlotModal } from '@/components/schedule/create-schedule-slot-modal';
+import { CreateScheduleModal } from '@/components/schedule/create-schedule-modal';
 import { ScheduleDetailModal } from '@/components/schedule/schedule-detail-modal';
 import { ScheduleListModal } from '@/components/schedule/schedule-list-modal';
 import { useToast } from '@/components/ui/use-toast';
@@ -42,14 +44,14 @@ export function ScheduleCalendar() {
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>(''); // Initialize with empty string
-  const [selectedTeacher, setSelectedTeacher] = useState<string>(''); // Initialize with empty string
+  const [selectedClass, setSelectedClass] = useState<string>('all'); // Initialize with 'all' to show all classes
+  const [selectedTeacher, setSelectedTeacher] = useState<string>('all'); // Initialize with 'all' to show all teachers
   const [loading, setLoading] = useState(true);
 
   // Modal state for creating new slots
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(1);
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedDay, setSelectedDay] = useState<number | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
 
   // Modal state for viewing/editing existing slots
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -87,9 +89,18 @@ export function ScheduleCalendar() {
   const loadScheduleData = async () => {
     setLoading(true);
     try {
-      // For now, we'll fetch all slots for the week
-      // In a real app, you would filter by class/teacher
-      const data = await getScheduleSlotsForWeek(currentDate);
+      // Build filters object
+      const filters: { classId?: string; teacherId?: string } = {};
+
+      if (selectedClass && selectedClass !== 'all') {
+        filters.classId = selectedClass;
+      }
+
+      if (selectedTeacher && selectedTeacher !== 'all') {
+        filters.teacherId = selectedTeacher;
+      }
+
+      const data = await getScheduleSlotsForWeek(currentDate, filters);
       setSlots(data);
     } catch (error) {
       console.error('Failed to load schedule data:', error);
@@ -270,14 +281,28 @@ export function ScheduleCalendar() {
     <>
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Schedule</CardTitle>
               <CardDescription>
                 Weekly schedule view
               </CardDescription>
             </div>
-            
+              <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedDay(undefined);
+                    setSelectedTime(undefined);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Schedule
+                </Button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
             <div className="flex flex-wrap items-center gap-2">
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger className="w-40">
@@ -315,11 +340,32 @@ export function ScheduleCalendar() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                
-                <div className="px-3 py-1 text-sm font-medium">
-                  {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-                </div>
-                
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={currentDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setCurrentDate(date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -327,7 +373,7 @@ export function ScheduleCalendar() {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-                
+
                 <ExportScheduleButton currentDate={currentDate} />
               </div>
             </div>
@@ -378,11 +424,11 @@ export function ScheduleCalendar() {
         </CardContent>
       </Card>
       
-      <CreateScheduleSlotModal
+      <CreateScheduleModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        dayOfWeek={selectedDay}
-        startTime={selectedTime}
+        defaultDayOfWeek={selectedDay}
+        defaultStartTime={selectedTime}
         onScheduleCreated={handleScheduleCreated}
       />
 
