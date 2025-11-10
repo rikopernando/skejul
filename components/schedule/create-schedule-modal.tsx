@@ -1,6 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/**
+ * CreateScheduleModal - Modal for creating new schedule slots
+ *
+ * Features:
+ * - Create schedule with all required fields
+ * - Optional pre-filled day and time (when clicking calendar slot)
+ * - Duration preservation when changing start time
+ * - Smart end time filtering (only shows times after start time)
+ */
+
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -11,38 +21,24 @@ import { useClassData } from '@/hooks/use-class-data';
 import { useTeacherData } from '@/hooks/use-teacher-data';
 import { useSubjectData } from '@/hooks/use-subject-data';
 import { useRoomData } from '@/hooks/use-room-data';
+import { DAYS_OF_WEEK } from '@/lib/schedule-constants';
+import {
+  generateTimeOptions,
+  calculateDuration,
+  addMinutesToTime,
+  isValidTimeRange,
+  getFilteredEndTimeOptions,
+} from '@/lib/schedule-time-utils';
 
 interface CreateScheduleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onScheduleCreated: () => void;
-  // Optional pre-filled values when clicking on calendar slot
   defaultDayOfWeek?: number;
   defaultStartTime?: string;
 }
 
-const daysOfWeek = [
-  { value: '1', label: 'Monday' },
-  { value: '2', label: 'Tuesday' },
-  { value: '3', label: 'Wednesday' },
-  { value: '4', label: 'Thursday' },
-  { value: '5', label: 'Friday' },
-  { value: '6', label: 'Saturday' },
-  { value: '7', label: 'Sunday' },
-];
-
-// Generate time options (7:00 AM to 6:00 PM in 15-minute intervals)
-const generateTimeOptions = () => {
-  const times = [];
-  for (let hour = 7; hour <= 18; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      times.push(timeString);
-    }
-  }
-  return times;
-};
-
+// Generate time options once
 const timeOptions = generateTimeOptions();
 
 export function CreateScheduleModal({
@@ -79,31 +75,11 @@ export function CreateScheduleModal({
     }
   }, [open, defaultDayOfWeek, defaultStartTime]);
 
-  // Calculate duration in minutes between two time strings
-  const calculateDuration = (start: string, end: string) => {
-    if (!start || !end) return 0;
-    const [startHour, startMin] = start.split(':').map(Number);
-    const [endHour, endMin] = end.split(':').map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    return endMinutes - startMinutes;
-  };
-
-  // Add minutes to a time string
-  const addMinutesToTime = (time: string, minutes: number) => {
-    if (!time) return '';
-    const [hour, min] = time.split(':').map(Number);
-    const totalMinutes = hour * 60 + min + minutes;
-    const newHour = Math.floor(totalMinutes / 60);
-    const newMin = totalMinutes % 60;
-    return `${newHour.toString().padStart(2, '0')}:${newMin.toString().padStart(2, '0')}`;
-  };
-
-  // Get filtered end time options (only times after start time)
-  const getFilteredEndTimeOptions = () => {
-    if (!startTime) return timeOptions;
-    return timeOptions.filter(time => time > startTime);
-  };
+  // Memoized filtered end time options
+  const filteredEndTimeOptions = useMemo(
+    () => getFilteredEndTimeOptions(startTime, timeOptions),
+    [startTime]
+  );
 
   // Handle start time change with duration preservation
   const handleStartTimeChange = (newStartTime: string) => {
@@ -132,7 +108,7 @@ export function CreateScheduleModal({
     }
 
     // Validate end time is after start time
-    if (endTime <= startTime) {
+    if (!isValidTimeRange(startTime, endTime)) {
       toast.error('End time must be after start time');
       return;
     }
@@ -177,7 +153,7 @@ export function CreateScheduleModal({
           <DialogTitle>Create Schedule</DialogTitle>
           <DialogDescription>
             {defaultDayOfWeek && defaultStartTime
-              ? `Create a new schedule slot for ${daysOfWeek[defaultDayOfWeek - 1]?.label} at ${defaultStartTime}`
+              ? `Create a new schedule slot for ${DAYS_OF_WEEK[defaultDayOfWeek - 1]?.label} at ${defaultStartTime}`
               : 'Create a new schedule slot by specifying day and time'}
           </DialogDescription>
         </DialogHeader>
@@ -191,8 +167,8 @@ export function CreateScheduleModal({
                 <SelectValue placeholder="Select day" />
               </SelectTrigger>
               <SelectContent>
-                {daysOfWeek.map((day) => (
-                  <SelectItem key={day.value} value={day.value}>
+                {DAYS_OF_WEEK.map((day) => (
+                  <SelectItem key={day.value} value={day.value.toString()}>
                     {day.label}
                   </SelectItem>
                 ))}
@@ -227,7 +203,7 @@ export function CreateScheduleModal({
                 <SelectValue placeholder="Select end time" />
               </SelectTrigger>
               <SelectContent>
-                {getFilteredEndTimeOptions().map((time) => (
+                {filteredEndTimeOptions.map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
                   </SelectItem>
