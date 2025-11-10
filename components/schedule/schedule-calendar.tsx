@@ -11,6 +11,7 @@ import { useClassData } from '@/hooks/use-class-data';
 import { useTeacherData } from '@/hooks/use-teacher-data';
 import { CreateScheduleSlotModal } from '@/components/schedule/create-schedule-slot-modal';
 import { ScheduleDetailModal } from '@/components/schedule/schedule-detail-modal';
+import { ScheduleListModal } from '@/components/schedule/schedule-list-modal';
 import { useToast } from '@/components/ui/use-toast';
 import { ExportScheduleButton } from '@/components/schedule/export-schedule-button';
 
@@ -53,7 +54,11 @@ export function ScheduleCalendar() {
   // Modal state for viewing/editing existing slots
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
-  
+
+  // Modal state for viewing list of overlapping schedules
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
+  const [selectedSlots, setSelectedSlots] = useState<ScheduleSlot[]>([]);
+
   const { classes, loading: classesLoading } = useClassData();
   const { teachers, loading: teachersLoading } = useTeacherData();
 
@@ -119,13 +124,12 @@ export function ScheduleCalendar() {
 
     // Each 30-minute slot consists of:
     // - h-16 (64px content)
-    // - p-1 (8px total padding: 4px top + 4px bottom)
     // - gap-1 (4px gap after each cell except the last)
-    // Total per cell: 64 + 8 + 4 = 76px
-    // For the last cell, no gap after: 64 + 8 = 72px
-    // Formula: (n-1) * 76 + 72 = 76n - 4
+    // Total per cell: 64 + 4 = 68px
+    // For the last cell, no gap after: 64px
+    // Formula: (n-1) * 68 + 64 = 68n - 4
     const slotsCount = durationMinutes / 30;
-    return slotsCount * 76 - 4;
+    return slotsCount * 68 - 4;
   };
 
   // Get the index of a time slot
@@ -155,7 +159,20 @@ export function ScheduleCalendar() {
   };
 
   // Handle clicking on an existing schedule slot
-  const handleSlotClick = (slot: ScheduleSlot) => {
+  const handleSlotClick = (slotsAtTime: ScheduleSlot[]) => {
+    if (slotsAtTime.length === 1) {
+      // Single schedule - open detail modal directly
+      setSelectedSlot(slotsAtTime[0]);
+      setIsDetailModalOpen(true);
+    } else {
+      // Multiple schedules - open list modal
+      setSelectedSlots(slotsAtTime);
+      setIsListModalOpen(true);
+    }
+  };
+
+  // Handle selecting a slot from the list modal
+  const handleSlotSelectFromList = (slot: ScheduleSlot) => {
     setSelectedSlot(slot);
     setIsDetailModalOpen(true);
   };
@@ -174,15 +191,21 @@ export function ScheduleCalendar() {
   const renderTimeSlot = (dayIndex: number, time: string) => {
     const slotsAtTime = findSlotsAtTime(dayIndex, time);
 
-    // If there are slots starting at this time, render them with offset stacking
+    // If there are slots starting at this time
     if (slotsAtTime.length > 0) {
+      // Show up to 3 schedules with offset stacking
+      const slotsToShow = slotsAtTime.slice(0, 3);
+      const remainingCount = slotsAtTime.length - 3;
+      const hasMore = remainingCount > 0;
+
       return (
         <>
-          {slotsAtTime.map((slot, index) => {
+          {slotsToShow.map((slot, index) => {
             const height = calculateSlotHeight(slot.startTime, slot.endTime);
             const colors = getSlotColor(index);
             const offset = index * 8; // 8px offset for each subsequent slot
             const zIndex = 10 + index; // Higher z-index for slots on top
+            const isLastShown = index === slotsToShow.length - 1;
 
             return (
               <div
@@ -195,7 +218,10 @@ export function ScheduleCalendar() {
                   right: `-${offset}px`,
                   zIndex
                 }}
-                onClick={() => handleSlotClick(slot)}
+                onClick={() => {
+                  setSelectedSlot(slot);
+                  setIsDetailModalOpen(true);
+                }}
               >
                 <div className="text-xs font-medium truncate">
                   {slot.subject?.name}
@@ -206,6 +232,20 @@ export function ScheduleCalendar() {
                 <div className="text-xs text-muted-foreground truncate">
                   {slot.room?.name}
                 </div>
+
+                {/* Badge for remaining schedules - show on the last visible schedule */}
+                {isLastShown && hasMore && (
+                  <div
+                    className="absolute bottom-1 right-1 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full hover:bg-primary/90 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the slot's onClick
+                      setSelectedSlots(slotsAtTime);
+                      setIsListModalOpen(true);
+                    }}
+                  >
+                    +{remainingCount} more
+                  </div>
+                )}
               </div>
             );
           })}
@@ -325,7 +365,7 @@ export function ScheduleCalendar() {
                         {time}
                       </div>
                       {days.map((_, dayIndex) => (
-                        <div key={`${timeIndex}-${dayIndex}`} className="p-1 relative">
+                        <div key={`${timeIndex}-${dayIndex}`} className="relative">
                           {renderTimeSlot(dayIndex, time)}
                         </div>
                       ))}
@@ -351,6 +391,13 @@ export function ScheduleCalendar() {
         onOpenChange={setIsDetailModalOpen}
         slot={selectedSlot}
         onScheduleUpdated={handleScheduleUpdated}
+      />
+
+      <ScheduleListModal
+        open={isListModalOpen}
+        onOpenChange={setIsListModalOpen}
+        slots={selectedSlots}
+        onSlotSelect={handleSlotSelectFromList}
       />
     </>
   );
