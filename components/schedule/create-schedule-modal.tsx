@@ -10,25 +10,19 @@
  * - Smart end time filtering (only shows times after start time)
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { createScheduleSlot } from '@/app/actions/schedule-actions';
-import { useClassData } from '@/hooks/use-class-data';
-import { useTeacherData } from '@/hooks/use-teacher-data';
-import { useSubjectData } from '@/hooks/use-subject-data';
-import { useRoomData } from '@/hooks/use-room-data';
 import { DAYS_OF_WEEK } from '@/lib/schedule-constants';
 import {
   generateTimeOptions,
   calculateDuration,
   addMinutesToTime,
   isValidTimeRange,
-  getFilteredEndTimeOptions,
 } from '@/lib/schedule-time-utils';
+import { ScheduleFormFields } from './schedule-form-fields';
 
 interface CreateScheduleModalProps {
   open: boolean;
@@ -58,11 +52,6 @@ export function CreateScheduleModal({
   const [roomId, setRoomId] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { classes } = useClassData();
-  const { teachers } = useTeacherData();
-  const { subjects } = useSubjectData();
-  const { rooms } = useRoomData();
-
   // Set default values when modal opens
   useEffect(() => {
     if (open) {
@@ -74,12 +63,6 @@ export function CreateScheduleModal({
       }
     }
   }, [open, defaultDayOfWeek, defaultStartTime]);
-
-  // Memoized filtered end time options
-  const filteredEndTimeOptions = useMemo(
-    () => getFilteredEndTimeOptions(startTime, timeOptions),
-    [startTime]
-  );
 
   // Handle start time change with duration preservation
   const handleStartTimeChange = (newStartTime: string) => {
@@ -157,132 +140,25 @@ export function CreateScheduleModal({
               : 'Create a new schedule slot by specifying day and time'}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="day" className="text-right">
-              Day
-            </Label>
-            <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select day" />
-              </SelectTrigger>
-              <SelectContent>
-                {DAYS_OF_WEEK.map((day) => (
-                  <SelectItem key={day.value} value={day.value.toString()}>
-                    {day.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="start-time" className="text-right">
-              Start Time
-            </Label>
-            <Select value={startTime} onValueChange={handleStartTimeChange}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select start time" />
-              </SelectTrigger>
-              <SelectContent>
-                {timeOptions.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="end-time" className="text-right">
-              End Time
-            </Label>
-            <Select value={endTime} onValueChange={setEndTime} disabled={!startTime}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select end time" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredEndTimeOptions.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="teacher" className="text-right">
-              Teacher
-            </Label>
-            <Select value={teacherId} onValueChange={setTeacherId}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select teacher" />
-              </SelectTrigger>
-              <SelectContent>
-                {teachers.map((teacher) => (
-                  <SelectItem key={teacher.id} value={teacher.id}>
-                    {teacher.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="subject" className="text-right">
-              Subject
-            </Label>
-            <Select value={subjectId} onValueChange={setSubjectId}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((subject) => (
-                  <SelectItem key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="class" className="text-right">
-              Class
-            </Label>
-            <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select class" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="room" className="text-right">
-              Room
-            </Label>
-            <Select value={roomId} onValueChange={setRoomId}>
-              <SelectTrigger className="col-span-3 w-full">
-                <SelectValue placeholder="Select room" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="py-4">
+          <ScheduleFormFields
+            mode="create"
+            layout="grid"
+            dayOfWeek={dayOfWeek}
+            startTime={startTime}
+            endTime={endTime}
+            teacherId={teacherId}
+            subjectId={subjectId}
+            classId={classId}
+            roomId={roomId}
+            onDayOfWeekChange={setDayOfWeek}
+            onStartTimeChange={handleStartTimeChange}
+            onEndTimeChange={setEndTime}
+            onTeacherIdChange={setTeacherId}
+            onSubjectIdChange={setSubjectId}
+            onClassIdChange={setClassId}
+            onRoomIdChange={setRoomId}
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

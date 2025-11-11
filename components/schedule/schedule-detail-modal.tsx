@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -12,23 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { updateScheduleSlot, deleteScheduleSlot } from '@/app/actions/schedule-actions';
-import { useTeacherData } from '@/hooks/use-teacher-data';
-import { useSubjectData } from '@/hooks/use-subject-data';
-import { useClassData } from '@/hooks/use-class-data';
-import { useRoomData } from '@/hooks/use-room-data';
-import { Trash2, Edit2, X } from 'lucide-react';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -36,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ScheduleFormFields } from './schedule-form-fields';
 
 type ScheduleSlot = {
   id: string;
@@ -87,11 +74,6 @@ export function ScheduleDetailModal({
   const [roomId, setRoomId] = useState('');
   const [endTime, setEndTime] = useState('');
 
-  const { teachers } = useTeacherData();
-  const { subjects } = useSubjectData();
-  const { classes } = useClassData();
-  const { rooms } = useRoomData();
-
   // Initialize form when slot changes
   useEffect(() => {
     if (slot) {
@@ -139,12 +121,13 @@ export function ScheduleDetailModal({
     try {
       await deleteScheduleSlot(slot.id);
       toast.success('Schedule deleted successfully');
+
       setDeleteDialogOpen(false);
       onOpenChange(false);
       onScheduleUpdated();
+      setLoading(false);
     } catch (error) {
       toast.error('Failed to delete schedule');
-    } finally {
       setLoading(false);
     }
   };
@@ -167,7 +150,7 @@ export function ScheduleDetailModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <div className="flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between">
               <DialogTitle>
                 {isEditing ? 'Edit Schedule' : 'Schedule Details'}
               </DialogTitle>
@@ -197,111 +180,53 @@ export function ScheduleDetailModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Subject */}
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              {isEditing ? (
-                <Select value={subjectId} onValueChange={setSubjectId}>
-                  <SelectTrigger id="subject">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm font-medium">{slot.subject?.name || '-'}</div>
-              )}
-            </div>
-
-            {/* Teacher */}
-            <div className="space-y-2">
-              <Label htmlFor="teacher">Teacher</Label>
-              {isEditing ? (
-                <Select value={teacherId} onValueChange={setTeacherId}>
-                  <SelectTrigger id="teacher">
-                    <SelectValue placeholder="Select teacher" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.id} value={teacher.id}>
-                        {teacher.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm font-medium">{slot.teacher?.name || '-'}</div>
-              )}
-            </div>
-
-            {/* Class */}
-            <div className="space-y-2">
-              <Label htmlFor="class">Class</Label>
-              {isEditing ? (
-                <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger id="class">
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm font-medium">{slot.class?.name || '-'}</div>
-              )}
-            </div>
-
-            {/* Room */}
-            <div className="space-y-2">
-              <Label htmlFor="room">Room</Label>
-              {isEditing ? (
-                <Select value={roomId} onValueChange={setRoomId}>
-                  <SelectTrigger id="room">
-                    <SelectValue placeholder="Select room" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((room) => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm font-medium">{slot.room?.name || '-'}</div>
-              )}
-            </div>
-
-            {/* Time */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Start Time</Label>
-                <div className="text-sm font-medium">{slot.startTime}</div>
+          <div className="py-0">
+            {isEditing ? (
+              <ScheduleFormFields
+                mode="edit"
+                layout="stacked"
+                startTime={slot.startTime}
+                endTime={endTime}
+                teacherId={teacherId}
+                subjectId={subjectId}
+                classId={classId}
+                roomId={roomId}
+                onEndTimeChange={setEndTime}
+                onTeacherIdChange={setTeacherId}
+                onSubjectIdChange={setSubjectId}
+                onClassIdChange={setClassId}
+                onRoomIdChange={setRoomId}
+              />
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground mb-0">Subject</div>
+                  <div className="text-sm font-medium">{slot.subject?.name || '-'}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground mb-0">Teacher</div>
+                  <div className="text-sm font-medium">{slot.teacher?.name || '-'}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground mb-0">Class</div>
+                  <div className="text-sm font-medium">{slot.class?.name || '-'}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground mb-0">Room</div>
+                  <div className="text-sm font-medium">{slot.room?.name || '-'}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground mb-0">Start Time</div>
+                    <div className="text-sm font-medium">{slot.startTime}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground mb-0">End Time</div>
+                    <div className="text-sm font-medium">{slot.endTime}</div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
-                {isEditing ? (
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                  />
-                ) : (
-                  <div className="text-sm font-medium">{slot.endTime}</div>
-                )}
-              </div>
-            </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -336,10 +261,14 @@ export function ScheduleDetailModal({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={loading}>
+            <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+            >
               {loading ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
